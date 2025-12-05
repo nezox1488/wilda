@@ -1,11 +1,10 @@
--- Wild Client 4.1 — С исправленной и блокирующей системой Логина
+-- Wild Client 4.2 — С исправленной логикой и обходом через End
 
 -- =================================================================================
 -- I. НАСТРОЙКИ КЛАВИШ И СОСТОЯНИЙ
 -- =================================================================================
 
--- ... (FUNCTION_STATES, BINDS, и Настройки - Оставлены без изменений) ...
-
+-- Единая таблица для управления состоянием всех функций
 local FUNCTION_STATES = {
     Fly = false,
     NoClip = false,
@@ -21,6 +20,7 @@ local FUNCTION_STATES = {
     MenuToggle = false,
 }
 
+-- Бинды
 local BINDS = {
     Movement = {
         ["Fly"] = Enum.KeyCode.R,
@@ -42,6 +42,7 @@ local BINDS = {
     }
 }
 
+-- Настройки
 local flySpeed = 100
 local aimRadius = 100
 local flyAntiKickEnabled = true 
@@ -60,13 +61,13 @@ local UIS = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
-local loggedIn = false -- Теперь снова блокируем
+local loggedIn = false 
 local guiActive = false
 local currentCategory = "Movement"
 local waitingForBind = nil 
 local flyVel, flyGyro, flyStartTime
 
--- ... (notify, getRole functions - Оставлены без изменений) ...
+-- Уведомления и Роли
 local notificationGui = Instance.new("ScreenGui", game.CoreGui)
 notificationGui.Name = "WCNotification"
 local notifLabel = Instance.new("TextLabel", notificationGui)
@@ -102,7 +103,7 @@ local function getRole(pl)
 end
 -- =================================================================================
 -- III. ОСНОВНАЯ ЛОГИКА ФУНКЦИЙ (RunService)
--- ... (Этот блок остается прежним, так как он использует FUNCTION_STATES) ...
+-- =================================================================================
 
 local function mouse1click()
     -- game:GetService("VirtualUser"):Click(Vector2.new(0, 0)) 
@@ -269,7 +270,7 @@ local function createLoginGUI()
     Instance.new("UICorner", loginBox).CornerRadius = UDim.new(0, 6)
     loginBox.TextXAlignment = Enum.TextXAlignment.Center
 
-    -- Пароль (Визуально маскируем, но читаем текст)
+    -- Пароль
     local passwordBox = Instance.new("TextBox", bg)
     passwordBox.Size = UDim2.new(0.8, 0, 0, 30)
     passwordBox.Position = UDim2.new(0.1, 0, 0.45, 0)
@@ -284,6 +285,8 @@ local function createLoginGUI()
     -- Простая маскировка пароля
     passwordBox.Text.Changed:Connect(function()
         if passwordBox.Text ~= "" then
+            -- Note: This simple masking method doesn't hide the actual text property, but visually replaces it.
+            -- In some exploits, using TextScaled/TextWrapped may be needed for better masking.
             passwordBox.Text = string.rep("*", #passwordBox.Text)
         end
     end)
@@ -322,13 +325,16 @@ local function createLoginGUI()
     cancelBtn.TextSize = 18
     Instance.new("UICorner", cancelBtn).CornerRadius = UDim.new(0, 6)
     
-    -- Логика Входа (ИСПРАВЛЕНА!)
+    -- Логика Входа
     loginBtn.MouseButton1Click:Connect(function()
-        local enteredLogin = loginBox.Text -- ЧИТАЕМ .Text (Исправлено)
-        local enteredPassword = passwordBox.Text -- ЧИТАЕМ .Text (Исправлено)
+        -- Читаем актуальные данные:
+        local enteredLogin = loginBox.Text 
+        local actualPassword = passwordBox.Text 
         
-        -- Убираем символы маскировки, если они есть
-        local actualPassword = enteredPassword:gsub("*", "")
+        -- Убираем символы маскировки, если они есть (если используется простая маскировка)
+        if actualPassword:sub(1,1) == "*" then
+             actualPassword = actualPassword:gsub("*", "")
+        end
         
         if enteredLogin == REQUIRED_LOGIN and actualPassword == REQUIRED_PASSWORD then
             loggedIn = true
@@ -345,14 +351,12 @@ local function createLoginGUI()
         sg:Destroy()
     end)
     
-    -- Открываем окно сразу при запуске
     sg.Enabled = true
 end
 
 -- =================================================================================
 -- V. GUI-ИНТЕРФЕЙС И ЛОГИКА (Main Menu)
 -- ... (Этот блок остается прежним) ...
-
 local function teleportToInnocent()
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not root then notify("Нет персонажа!", 1.5) return end
@@ -645,6 +649,18 @@ UIS.InputBegan:Connect(function(input, gpe)
     
     local key = input.KeyCode
 
+    -- === ОБХОД СИСТЕМЫ ЛОГИНА (END KEY BYPASS) ===
+    if key == Enum.KeyCode.End then
+        loggedIn = true
+        local loginGui = game.CoreGui:FindFirstChild("LoginGUI")
+        if loginGui then
+            loginGui:Destroy()
+        end
+        notify("Bypass активирован! Логин пропущен. Нажмите M.", 3)
+        return -- Прерываем дальнейшую обработку
+    end
+    -- =============================================
+
     -- Блокируем доступ, если не залогинен
     if not loggedIn and key == BINDS.Visual.MenuToggle then
         local loginGui = game.CoreGui:FindFirstChild("LoginGUI")
@@ -729,7 +745,7 @@ end)
 
 -- =================================================================================
 -- VI. ВИЗУАЛЬНАЯ ЛОГИКА (ESP)
--- ... (Этот блок остается прежним) ...
+-- =================================================================================
 
 -- PlayerESP
 local espBoxes = {}
