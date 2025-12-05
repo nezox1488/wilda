@@ -46,7 +46,7 @@ local BINDS = {
 local flySpeed = 100
 local aimRadius = 100
 local flyAntiKickEnabled = true 
-local GUI_BACKGROUND_TEXTURE_URL = "https://i.imgur.com/L13x2nK.png" -- <--- ВАША RAW ССЫЛКА
+local GUI_BACKGROUND_TEXTURE_URL = "https://raw.githubusercontent.com/nezox1488/Texture/main/cstexture.png" -- <--- ВАША RAW ССЫЛКА
 
 -- ЛОГИН
 local REQUIRED_LOGIN = "BetaTest"
