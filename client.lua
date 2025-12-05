@@ -503,7 +503,7 @@ local function createLoginGUI()
     
     -- Логика Входа
     loginBtn.MouseButton1Click:Connect(function()
-        local enteredLogin = loginBox.PlaceholderText -- Используем Text, не PlaceholderText
+        local enteredLogin = loginBox.Text -- НА ЭТУ СТРОКУ -- Используем Text, не PlaceholderText
         local enteredPassword = actualPassword
         
         if enteredLogin == REQUIRED_LOGIN and enteredPassword == REQUIRED_PASSWORD then
