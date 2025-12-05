@@ -378,18 +378,32 @@ local function teleportToInnocent()
 end
 
 local function massAssassinate()
-    if getRole(LocalPlayer) ~= "Murderer" then notify("MassAssassinate только для Murderer") return end
+
     task.spawn(function()
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not root then notify("Нет персонажа!", 1.5); return end
+
+        -- Проходим по всем игрокам
         for _,pl in ipairs(Players:GetPlayers()) do
-            if pl~=LocalPlayer and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-                local root = LocalPlayer.Character.HumanoidRootPart
+            -- Пропускаем себя и мертвых
+            if pl~=LocalPlayer and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and pl.Character:FindFirstChild("Humanoid") and pl.Character.Humanoid.Health > 0 then
+                
                 local tgt = pl.Character.HumanoidRootPart
-                if (root.Position - tgt.Position).Magnitude < 500 then
-                    root.CFrame = CFrame.new(tgt.Position + Vector3.new(0,2,0))
-                    wait(0.2); mouse1click(); wait(0.3)
+                
+                -- 1. Телепорт прямо в цель (минимальное смещение Y 0.5 для лучшего попадания)
+                root.CFrame = CFrame.new(tgt.Position + Vector3.new(0, 0.5, 0))
+                
+                -- 2. Клик ЛКМ 5 раз быстро
+                for i = 1, 5 do
+                    mouse1click()
+                    task.wait(0.01) -- Очень маленькая задержка для быстрого удара
                 end
+                
+                task.wait(0.1) -- Небольшая пауза перед переходом к следующей цели
             end
         end
+        
+        notify("MassAssassinate завершен!", 1.5)
     end)
     notify("MassAssassinate активирован", 1.5)
 end
