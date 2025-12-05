@@ -1,4 +1,4 @@
--- Wild Client 4.0 — Полностью исправленный код с системой Логина
+-- Wild Client 4.0 — Полностью исправленный код БЕЗ системы Логина
 
 -- =================================================================================
 -- I. НАСТРОЙКИ КЛАВИШ И СОСТОЯНИЙ
@@ -46,11 +46,7 @@ local BINDS = {
 local flySpeed = 100
 local aimRadius = 100
 local flyAntiKickEnabled = true 
-local GUI_BACKGROUND_TEXTURE_URL = "https://raw.githubusercontent.com/nezox1488/Texture/main/cstexture.png" -- <--- ВАША RAW ССЫЛКА
-
--- ЛОГИН
-local REQUIRED_LOGIN = "BetaTest"
-local REQUIRED_PASSWORD = "haski228"
+local GUI_BACKGROUND_TEXTURE_URL = "https://i.imgur.com/L13x2nK.png" -- <--- ВАША RAW ССЫЛКА
 
 -- =================================================================================
 -- II. СЕРВИСЫ И ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
@@ -61,14 +57,14 @@ local UIS = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
-local loggedIn = false
+-- Флаг доступа теперь всегда true
+local loggedIn = true 
 local guiActive = false
 local currentCategory = "Movement"
 local waitingForBind = nil 
 local flyVel, flyGyro, flyStartTime
 
 -- Уведомления и Роли (Оставлены без изменений)
--- ... [notify, getRole functions] ...
 local notificationGui = Instance.new("ScreenGui", game.CoreGui)
 notificationGui.Name = "WCNotification"
 local notifLabel = Instance.new("TextLabel", notificationGui)
@@ -238,9 +234,7 @@ end
 -- IV. GUI-ИНТЕРФЕЙС И ЛОГИКА
 -- =================================================================================
 
--- Телепорт и Массовое убийство (Оставлены без изменений)
 local function teleportToInnocent()
-    -- ... (логика teleportToInnocent)
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not root then notify("Нет персонажа!", 1.5) return end
     
@@ -261,7 +255,6 @@ local function teleportToInnocent()
 end
 
 local function massAssassinate()
-    -- ... (логика massAssassinate)
     if getRole(LocalPlayer) ~= "Murderer" then notify("MassAssassinate только для Murderer") return end
     task.spawn(function()
         for _,pl in ipairs(Players:GetPlayers()) do
@@ -282,7 +275,6 @@ end
 local functionsToUpdate = {} 
 
 local function updateBind(funcName, newKey)
-    -- ... (логика updateBind)
     local category
     for cat, funcs in pairs(BINDS) do
         if funcs[funcName] then
@@ -298,7 +290,6 @@ local function updateBind(funcName, newKey)
 end
 
 local function startBindChange(funcName)
-    -- ... (логика startBindChange)
     waitingForBind = funcName
     local sg = game.CoreGui:FindFirstChild("WildClientGUI")
     if sg then
@@ -344,7 +335,7 @@ local function createToggle(funcName, category)
         local state = customState ~= nil and customState or FUNCTION_STATES[funcName]
         btn.Text = state and "ON" or "OFF"
         btn.BackgroundColor3 = state and Color3.fromRGB(0,150,0) or Color3.fromRGB(150,0,0)
-        FUNCTION_STATES[funcName] = state -- Обновляем состояние в таблице
+        FUNCTION_STATES[funcName] = state 
     end
     
     btn.MouseButton1Click:Connect(function()
@@ -390,148 +381,53 @@ local function createToggle(funcName, category)
     return f
 end
 
--- =================================================================================
--- V. СИСТЕМА ЛОГИНА
--- =================================================================================
-
-local function createLoginGUI()
-    local sg = Instance.new("ScreenGui", game.CoreGui); sg.Name = "LoginGUI"
-    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-    local w = 300; local h = 200 -- Размеры окна
-    local bg = Instance.new("Frame", sg)
-    bg.Size = UDim2.new(0, w, 0, h)
-    bg.Position = UDim2.new(0.5, -w/2, 0.5, -h/2)
-    bg.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+local function updateFunctionList(parentFrame, category)
+    for _, child in pairs(parentFrame.ScrollingFrame:GetChildren()) do
+        if child:IsA("Frame") then child:Destroy() end
+    end
     
-    local corner = Instance.new("UICorner", bg)
-    corner.CornerRadius = UDim.new(0, 15)
+    local funcData = {}
 
-    local title = Instance.new("TextLabel", bg)
-    title.Size = UDim2.new(1, 0, 0, 30) 
-    title.Text = "Wild Login" 
-    title.Font = Enum.Font.SourceSansBold
-    title.TextColor3 = Color3.new(1,1,1)
-    title.BackgroundTransparency = 1
-    title.TextSize = 22
-    title.Position = UDim2.new(0, 0, 0.05, 0)
-
-    -- Логин
-    local loginBox = Instance.new("TextBox", bg)
-    loginBox.Size = UDim2.new(0.8, 0, 0, 30)
-    loginBox.Position = UDim2.new(0.1, 0, 0.25, 0)
-    loginBox.PlaceholderText = "Введите логин"
-    loginBox.Font = Enum.Font.SourceSans
-    loginBox.TextSize = 16
-    loginBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    loginBox.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", loginBox).CornerRadius = UDim.new(0, 6)
-    loginBox.TextXAlignment = Enum.TextXAlignment.Center
-
-    -- Пароль
-    local passwordBox = Instance.new("TextBox", bg)
-    passwordBox.Size = UDim2.new(0.8, 0, 0, 30)
-    passwordBox.Position = UDim2.new(0.1, 0, 0.45, 0)
-    passwordBox.PlaceholderText = "Введите пароль"
-    passwordBox.TextSize = 16
-    passwordBox.Font = Enum.Font.SourceSans
-    passwordBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    passwordBox.TextColor3 = Color3.new(1, 1, 1)
-    passwordBox.TextXAlignment = Enum.TextXAlignment.Center
-    passwordBox.TextScaled = false
-    passwordBox.TextWrapped = false
-    passwordBox.ClearTextOnFocus = false
-    passwordBox.MaxVisibleGraphemes = 0 -- Чтобы скрыть текст
-    passwordBox.TextTransparency = 1 -- Дополнительно скрыть
-    -- Устанавливаем специальный скрипт для маскировки (через InputBegan)
-
-    local errorLabel = Instance.new("TextLabel", bg)
-    errorLabel.Size = UDim2.new(1, 0, 0, 20)
-    errorLabel.Position = UDim2.new(0, 0, 0.65, 0)
-    errorLabel.Text = ""
-    errorLabel.Font = Enum.Font.SourceSansBold
-    errorLabel.TextColor3 = Color3.fromRGB(200, 0, 0)
-    errorLabel.BackgroundTransparency = 1
-    errorLabel.TextSize = 16
-    errorLabel.Visible = false
-
-    -- Логика маскировки пароля (визуально)
-    passwordBox.Changed:Connect(function(property)
-        if property == "Text" then
-            local text = passwordBox.Text
-            if text:len() > 0 then
-                passwordBox.MaxVisibleGraphemes = 999 
-                passwordBox.TextTransparency = 0
-                passwordBox.Text = string.rep("*", text:len())
-            else
-                passwordBox.MaxVisibleGraphemes = 0
-                passwordBox.TextTransparency = 1
-            end
+    if category == "Movement" then
+        funcData = {
+            {"Fly", "Movement"},
+            {"NoClip", "Movement"},
+            {"TeleportToInnocent", "Movement"}, 
+        }
+    elseif category == "Player" then
+        funcData = {
+            {"Aimbot", "Player"},
+            {"MassAssassinate", "Player"}, 
+            {"AssassinateMurderer", "Player"},
+            {"TargetMurderer", "Player"},
+            {"TargetSheriff", "Player"},
+            {"AntiMurdererDodge", "Player"},
+        }
+    elseif category == "Visual" then
+        funcData = {
+            {"PlayerESP", "Visual"},
+            {"WeaponESP", "Visual"},
+            {"MenuToggle", "Visual"}, 
+        }
+    end
+    
+    for _, data in ipairs(funcData) do
+        local f = createToggle(data[1], data[2])
+        f.Parent = parentFrame.ScrollingFrame
+    end
+    
+    if category == "Visual" then
+        if functionsToUpdate["MenuToggle"] then
+            functionsToUpdate["MenuToggle"].update(true)
         end
-    end)
-    
-    local actualPassword = "" -- Фактически введенный пароль
-    passwordBox.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.Backspace then
-            actualPassword = actualPassword:sub(1, -2)
-        elseif input.KeyCode.Name == "Unknown" and input.UserInputType == Enum.UserInputType.Keyboard then
-            actualPassword = actualPassword .. input.Text
-        end
-    end)
-    
-    -- Кнопка "Войти"
-    local loginBtn = Instance.new("TextButton", bg)
-    loginBtn.Size = UDim2.new(0.4, 0, 0, 30)
-    loginBtn.Position = UDim2.new(0.1, 0, 0.8, 0)
-    loginBtn.Text = "Войти"
-    loginBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-    loginBtn.TextColor3 = Color3.new(1, 1, 1)
-    loginBtn.Font = Enum.Font.SourceSansBold
-    loginBtn.TextSize = 18
-    Instance.new("UICorner", loginBtn).CornerRadius = UDim.new(0, 6)
-
-    -- Кнопка "Отмена"
-    local cancelBtn = Instance.new("TextButton", bg)
-    cancelBtn.Size = UDim2.new(0.4, 0, 0, 30)
-    cancelBtn.Position = UDim2.new(0.5, 30, 0.8, 0)
-    cancelBtn.Text = "Отмена"
-    cancelBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    cancelBtn.TextColor3 = Color3.new(1, 1, 1)
-    cancelBtn.Font = Enum.Font.SourceSansBold
-    cancelBtn.TextSize = 18
-    Instance.new("UICorner", cancelBtn).CornerRadius = UDim.new(0, 6)
-    
-    -- Логика Входа
-    loginBtn.MouseButton1Click:Connect(function()
-        local enteredLogin = loginBox.Text -- НА ЭТУ СТРОКУ -- Используем Text, не PlaceholderText
-        local enteredPassword = actualPassword
-        
-        if enteredLogin == REQUIRED_LOGIN and enteredPassword == REQUIRED_PASSWORD then
-            loggedIn = true
-            sg:Destroy()
-            notify("Вход успешен!", 2)
-            createGUI() -- Открываем основное меню после входа
-        else
-            errorLabel.Text = "Неверный логин или пароль!"
-            errorLabel.Visible = true
-        end
-    end)
-    
-    -- Логика Отмены
-    cancelBtn.MouseButton1Click:Connect(function()
-        sg:Destroy()
-    end)
+    end
 end
 
--- =================================================================================
--- VI. ГЛАВНЫЙ GUI (Main Menu)
--- =================================================================================
-
+-- ГЛАВНЫЙ GUI (Main Menu)
 local function createGUI()
     local sg = Instance.new("ScreenGui", game.CoreGui); sg.Name="WildClientGUI"
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- 1. Main Background (Texture)
     local bg = Instance.new("ImageLabel", sg)
     bg.Size = UDim2.new(0, 450, 0, 400) 
     bg.Position = UDim2.new(0.5, -225, 0.5, -200)
@@ -548,7 +444,6 @@ local function createGUI()
     frm.Position = UDim2.new(0, 10, 0, 10)
     frm.BackgroundTransparency = 1 
 
-    -- ... (Title, Category Buttons, Function List Frame, Bind Prompt Label - Оставлены без изменений) ...
     local title = Instance.new("TextLabel", frm)
     title.Size = UDim2.new(1, 0, 0, 40) 
     title.Text = "Wild Client 3.0"
@@ -621,67 +516,16 @@ local function createGUI()
     bindPrompt.TextSize = 16
     bindPrompt.Visible = false
 
-    local function updateFunctionList(parentFrame, category)
-        for _, child in pairs(parentFrame.ScrollingFrame:GetChildren()) do
-            if child:IsA("Frame") then child:Destroy() end
-        end
-        
-        local funcData = {}
-
-        if category == "Movement" then
-            funcData = {
-                {"Fly", "Movement"},
-                {"NoClip", "Movement"},
-                {"TeleportToInnocent", "Movement"}, 
-            }
-        elseif category == "Player" then
-            funcData = {
-                {"Aimbot", "Player"},
-                {"MassAssassinate", "Player"}, 
-                {"AssassinateMurderer", "Player"},
-                {"TargetMurderer", "Player"},
-                {"TargetSheriff", "Player"},
-                {"AntiMurdererDodge", "Player"},
-            }
-        elseif category == "Visual" then
-            funcData = {
-                {"PlayerESP", "Visual"},
-                {"WeaponESP", "Visual"},
-                {"MenuToggle", "Visual"}, 
-            }
-        end
-        
-        for _, data in ipairs(funcData) do
-            local f = createToggle(data[1], data[2])
-            f.Parent = parentFrame.ScrollingFrame
-        end
-        
-        if category == "Visual" then
-            if functionsToUpdate["MenuToggle"] then
-                functionsToUpdate["MenuToggle"].update(true)
-            end
-        end
-    end
-    
     updateFunctionList(funcList, currentCategory)
     catFrame.MovementButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
 
     return sg
 end
 
--- Обработка открытия/закрытия GUI
+-- Обработка открытия/закрытия GUI и биндов
 UIS.InputBegan:Connect(function(input, gpe)
     if gpe then return end
     
-    -- Блокируем доступ, если не залогинен
-    if not loggedIn and input.KeyCode == BINDS.Visual.MenuToggle then
-        local loginGui = game.CoreGui:FindFirstChild("LoginGUI")
-        if not loginGui then
-            createLoginGUI()
-        end
-        return
-    end
-
     local key = input.KeyCode
 
     -- Режим смены бинда
@@ -696,62 +540,60 @@ UIS.InputBegan:Connect(function(input, gpe)
         return
     end
 
-    -- Обход всех биндов (ТОЛЬКО после логина)
-    if loggedIn then
-        for category, funcs in pairs(BINDS) do
-            for funcName, bindKey in pairs(funcs) do
-                if key == bindKey then
-                    
-                    -- Специальная обработка для MenuToggle
-                    if funcName == "MenuToggle" then
-                         guiActive = not guiActive
-                         if guiActive then
+    -- Обход всех биндов
+    for category, funcs in pairs(BINDS) do
+        for funcName, bindKey in pairs(funcs) do
+            if key == bindKey then
+                
+                -- Специальная обработка для MenuToggle
+                if funcName == "MenuToggle" then
+                        guiActive = not guiActive
+                        if guiActive then
                             local sg = createGUI()
-                         else
-                             local sg = game.CoreGui:FindFirstChild("WildClientGUI")
-                             if sg then sg:Destroy() end
-                         end
+                        else
+                            local sg = game.CoreGui:FindFirstChild("WildClientGUI")
+                            if sg then sg:Destroy() end
+                        end
+                
+                -- Функции с немедленным действием
+                elseif funcName == "TeleportToInnocent" then
+                    teleportToInnocent()
+                elseif funcName == "MassAssassinate" then
+                    massAssassinate()
+                
+                -- Функции-переключатели
+                else
+                    local newState = not FUNCTION_STATES[funcName]
+                    FUNCTION_STATES[funcName] = newState
                     
-                    -- Функции с немедленным действием
-                    elseif funcName == "TeleportToInnocent" then
-                        teleportToInnocent()
-                    elseif funcName == "MassAssassinate" then
-                        massAssassinate()
-                    
-                    -- Функции-переключатели
-                    else
-                        local newState = not FUNCTION_STATES[funcName]
-                        FUNCTION_STATES[funcName] = newState
-                        
-                        -- Логика Fly для горячей клавиши
-                        if funcName == "Fly" then
-                            if newState == false then 
-                                if flyVel then flyVel:Destroy(); flyVel=nil end
-                                if flyGyro then flyGyro:Destroy(); flyGyro=nil end
-                            else
-                                local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                                if root then
-                                    flyVel = Instance.new("BodyVelocity", root)
-                                    flyGyro = Instance.new("BodyGyro", root)
-                                    flyVel.MaxForce = Vector3.new(1e9,1e9,1e9)
-                                    flyGyro.MaxTorque = Vector3.new(1e9,1e9,1e9)
-                                    flyGyro.CFrame = Camera.CFrame
-                                    flyStartTime = tick()
-                                end
+                    -- Логика Fly для горячей клавиши
+                    if funcName == "Fly" then
+                        if newState == false then 
+                            if flyVel then flyVel:Destroy(); flyVel=nil end
+                            if flyGyro then flyGyro:Destroy(); flyGyro=nil end
+                        else
+                            local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                            if root then
+                                flyVel = Instance.new("BodyVelocity", root)
+                                flyGyro = Instance.new("BodyGyro", root)
+                                flyVel.MaxForce = Vector3.new(1e9,1e9,1e9)
+                                flyGyro.MaxTorque = Vector3.new(1e9,1e9,1e9)
+                                flyGyro.CFrame = Camera.CFrame
+                                flyStartTime = tick()
                             end
                         end
-                        
-                        if funcName == "AssassinateMurderer" then assassinateMurdererLogic() end
-                        notify(funcName .. (newState and " Вкл" or " Выкл"))
                     end
                     
-                    -- Обновление UI, если открыто
-                    if guiActive and functionsToUpdate[funcName] then
-                        functionsToUpdate[funcName].update(FUNCTION_STATES[funcName])
-                    end
-                    
-                    return
+                    if funcName == "AssassinateMurderer" then assassinateMurdererLogic() end
+                    notify(funcName .. (newState and " Вкл" or " Выкл"))
                 end
+                
+                -- Обновление UI, если открыто
+                if guiActive and functionsToUpdate[funcName] then
+                    functionsToUpdate[funcName].update(FUNCTION_STATES[funcName])
+                end
+                
+                return
             end
         end
     end
@@ -759,7 +601,7 @@ end)
 
 
 -- =================================================================================
--- VII. ВИЗУАЛЬНАЯ ЛОГИКА (ESP - ИСПРАВЛЕНА СКОРОСТЬ)
+-- V. ВИЗУАЛЬНАЯ ЛОГИКА (ESP)
 -- =================================================================================
 
 -- PlayerESP
@@ -785,7 +627,7 @@ task.spawn(function()
         else
             for _,b in pairs(espBoxes) do b:Destroy() end; espBoxes={}
         end
-        task.wait(0.5) -- ИСПРАВЛЕНО: Быстрое обновление
+        task.wait(0.5) 
     end
 end)
 
